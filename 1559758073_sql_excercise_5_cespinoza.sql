@@ -13,12 +13,6 @@ Structure the result to have the following columns:
 */
 
 
-
-
-
-
-
-
 SELECT Msg_table.author as user_id, COUNT(*) as issue_count
 FROM(
 	SELECT i.issue_id, m.author, m.type, MIN(m.timestamp)
