@@ -13,10 +13,16 @@ Structure the result to have the following columns:
 -total_guest_count
 */
 
-SELECT guest_t.year, guest_t.week, guest_t.dt
+SELECT guest_t.year, guest_t.week, SUM(guest_t.repeat_guest) as repeat_guest_count, SUM(guest_t.new_guest) as new_guest_count, 
+SUM(guest_t.repeat_guest) + SUM(guest_t.new_guest) as total_guest_count
+
 FROM(
-	SELECT gmt_1.msg1, gmt_2.msg2, gmt_1.atime - gmt_2.atime as dt, WEEK(FROM_UNIXTIME(gmt_1.msg1)) as 'week',
+	SELECT gmt_1.msg1, gmt_2.msg2,
+	CASE WHEN DAY(FROM_UNIXTIME(gmt_1.atime - gmt_2.atime)) > 7 THEN 1 ELSE 0 END as 'repeat_guest',
+	CASE WHEN DAY(FROM_UNIXTIME(gmt_1.atime - gmt_2.atime)) < 7 THEN 1 ELSE 0 END as 'new_guest',
+	WEEK(FROM_UNIXTIME(gmt_1.msg1)) as 'week', 
 	YEAR(FROM_UNIXTIME(gmt_1.msg1)) as 'year'
+	
 	FROM(
 		SELECT MAX(m.timestamp) as atime, i.issue_id, m.timestamp as msg1
 		FROM message as m
@@ -33,7 +39,8 @@ FROM(
 	    GROUP BY i.issue_id
     ) as gmt_2 ON gmt_2.issue_id = gmt_1.issue_id
     
+    
 ) as guest_t
 
-WHERE DAY(FROM_UNIXTIME(guest_t.dt)) > 7;
+GROUP BY guest_t.year, guest_t.week;
 
